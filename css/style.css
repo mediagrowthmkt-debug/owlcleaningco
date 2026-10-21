@@ -279,6 +279,9 @@ p + p { margin-top: 1rem; }
   .mobile-bar svg { width: 18px; height: 18px; }
   .mobile-bar__call { border: 2px solid var(--pink-deep); color: var(--pink-ink); background: var(--white); }
   .mobile-bar__quote { background: var(--pink-deep); color: var(--white); }
+  .mobile-bar { transition: transform .25s ease, opacity .25s ease; }
+  .mobile-bar.is-hidden { transform: translateY(110%); opacity: 0; pointer-events: none; }
+  form[data-quote] { padding-bottom: 84px; }
   body { padding-bottom: 76px; }
 }
 @media (max-width: 768px) { .hero .photo--tall { aspect-ratio: 4 / 3; } }

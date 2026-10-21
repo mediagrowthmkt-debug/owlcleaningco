@@ -230,6 +230,18 @@ function initCallTracking() {
   });
 }
 
+function initMobileBar() {
+  const bar = document.querySelector('.mobile-bar');
+  const forms = document.querySelectorAll('form[data-quote]');
+  if (!bar || !forms.length || !('IntersectionObserver' in window)) return;
+  const visible = new Set();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => { if (en.isIntersecting) visible.add(en.target); else visible.delete(en.target); });
+    bar.classList.toggle('is-hidden', visible.size > 0);
+  }, { threshold: 0 });
+  forms.forEach((f) => io.observe(f));
+}
+
 function initYear() {
   document.querySelectorAll('[data-year]').forEach((el) => { el.textContent = new Date().getFullYear(); });
 }
@@ -239,5 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initMenu();
   initForms();
   initCallTracking();
+  initMobileBar();
   initYear();
 });
