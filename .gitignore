@@ -1,0 +1,12 @@
+_bak*/
+_shots/
+estrategia/
+*.py
+*.bak*
+__pycache__/
+*.ceu.json
+.DS_Store
+.trocas-manuais.json
+# add por mg-publicar-site (nao subir lixo)
+_drive-materiais/
+images/work/_mapa.json
