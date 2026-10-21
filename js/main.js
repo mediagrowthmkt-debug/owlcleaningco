@@ -58,7 +58,7 @@ function buildPayload(form) {
     bedrooms: data.get('bedrooms') || '',
     bathrooms: data.get('bathrooms') || '',
     frequency: data.get('frequency') || '',
-    message: (data.get('message') || '').trim(),
+    message: [data.get('zip') ? 'ZIP: ' + String(data.get('zip')).trim() : '', (data.get('message') || '').trim()].filter(Boolean).join(' | '),
     smsConsent: data.get('sms_consent') === 'yes',
     smsConsentText: data.get('sms_consent') === 'yes' ? consentText : '',
     formOrigin: form.dataset.origin || 'website',
@@ -83,6 +83,8 @@ async function handleQuote(event) {
   const cfg = window.OWL_CONFIG;
   const callLink = '<a href="tel:' + cfg.phoneTel + '">' + cfg.phoneDisplay + '</a>';
 
+  if (form._qs && form._qs.current < form._qs.steps.length - 1) { form._qs.next(); return; }
+  if (form._qs && !form._qs.valid(form._qs.current)) return;
   if (form.querySelector('[name="company_site"]').value) return;
   if (Date.now() - Number(form.dataset.started || 0) < 2500) return;
   if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -100,6 +102,7 @@ async function handleQuote(event) {
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     form.reset();
+    if (form._qs) form._qs.done();
     setStatus(form, 'ok', 'Thank you! Your request is in. We will reach out shortly with your quote. Prefer to talk now? Call ' + callLink + '.');
     trackLead(payload.formOrigin);
   } catch (err) {
@@ -110,11 +113,100 @@ async function handleQuote(event) {
   }
 }
 
+function initStepper(form) {
+  const steps = Array.from(form.querySelectorAll('.qs-step'));
+  if (steps.length < 2) return;
+  const back = form.querySelector('.qs-back');
+  const nextBtn = form.querySelector('.qs-next');
+  const count = form.querySelector('[data-qs-count]');
+  const label = form.querySelector('[data-qs-name]');
+  const bar = form.querySelector('.qs-bar span');
+  const err = form.querySelector('.qs-error');
+  const qs = { steps, current: 0 };
+
+  function radioGroups(step) {
+    return Array.from(new Set(Array.from(step.querySelectorAll('input[type="radio"]')).map((r) => r.name)));
+  }
+  function showError(msg) { if (err) { err.textContent = msg; err.classList.toggle('is-on', !!msg); } }
+
+  qs.valid = function (i) {
+    const step = steps[i];
+    for (const name of radioGroups(step)) {
+      if (!step.querySelector('input[name="' + name + '"]:checked')) {
+        const lbl = step.querySelector('input[name="' + name + '"]').closest('.opts').previousElementSibling;
+        const what = lbl && lbl.classList.contains('qs-label') ? lbl.textContent.toLowerCase() : 'an option';
+        showError('Please choose ' + (what === 'an option' ? what : 'the number of ' + what) + ' to continue.');
+        return false;
+      }
+    }
+    const city = step.querySelector('[name="city"]');
+    const zip = step.querySelector('[name="zip"]');
+    if (city && !city.value) { showError('Please select your town.'); city.focus(); return false; }
+    if (zip) {
+      const z = zip.value.trim();
+      if (z && !/^\d{5}$/.test(z)) { showError('Please enter a 5 digit ZIP code.'); zip.focus(); return false; }
+      if (city && /^other/i.test(city.value) && !z) { showError('Please add your ZIP code so we know where the home is.'); zip.focus(); return false; }
+    }
+    for (const el of step.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]), select, textarea')) {
+      if (el.closest('.hp')) continue;
+      if (!el.checkValidity()) {
+        const name = (el.labels && el.labels[0] ? el.labels[0].textContent : 'this field').replace(/\(optional\)/i, '').trim();
+        showError('Please check ' + name.toLowerCase() + '.');
+        el.focus();
+        return false;
+      }
+    }
+    showError('');
+    return true;
+  };
+
+  qs.show = function (i, focus) {
+    qs.current = i;
+    steps.forEach((s, k) => { s.hidden = k !== i; });
+    const last = i === steps.length - 1;
+    back.hidden = i === 0;
+    nextBtn.hidden = last;
+    form.classList.toggle('is-last', last);
+    count.textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
+    label.textContent = steps[i].dataset.name || '';
+    bar.style.width = ((i + 1) / steps.length * 100) + '%';
+    showError('');
+    if (focus) {
+      const top = form.getBoundingClientRect().top;
+      if (top < 70 || top > window.innerHeight * 0.6) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const first = steps[i].querySelector('input:checked') || steps[i].querySelector('input:not([type="hidden"]), select');
+      if (first && !(first.type === 'radio' && window.matchMedia('(hover: none)').matches)) first.focus({ preventScroll: true });
+    }
+  };
+  qs.next = function () { if (qs.valid(qs.current) && qs.current < steps.length - 1) qs.show(qs.current + 1, true); };
+  qs.done = function () { form.classList.add('is-done'); };
+
+  back.addEventListener('click', () => { if (qs.current > 0) qs.show(qs.current - 1, true); });
+  nextBtn.addEventListener('click', qs.next);
+  steps.forEach((step, i) => {
+    step.addEventListener('change', (e) => {
+      if (e.target.type !== 'radio') return;
+      showError('');
+      const groups = radioGroups(step);
+      const complete = groups.every((n) => step.querySelector('input[name="' + n + '"]:checked'));
+      if (complete && (step.hasAttribute('data-auto') || groups.length > 1)) setTimeout(() => { if (qs.current === i) qs.next(); }, 220);
+    });
+  });
+  form.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+    if (qs.current < steps.length - 1) { e.preventDefault(); qs.next(); }
+  });
+  form._qs = qs;
+  form.classList.add('is-stepped');
+  qs.show(0, false);
+}
+
 function initForms() {
   document.querySelectorAll('form[data-quote]').forEach((form) => {
     form.dataset.started = String(Date.now());
     const btn = form.querySelector('button[type="submit"]');
     if (btn) btn.dataset.label = btn.textContent;
+    initStepper(form);
     form.addEventListener('submit', handleQuote);
   });
 }
