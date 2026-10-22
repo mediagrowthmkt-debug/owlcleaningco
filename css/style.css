@@ -335,3 +335,27 @@ p + p { margin-top: 1rem; }
 }
 .split > *, .quote, .quote form { min-width: 0; }
 .quote, form[data-quote] { scroll-margin-top: 96px; }
+
+/* Referral program (22-10-26) */
+.topbar-refer { display: inline-flex; align-items: center; gap: 8px; color: var(--gold-soft) !important; }
+.topbar-refer:hover { color: var(--white) !important; }
+.topbar-refer__tag { background: var(--gold); color: var(--night); border-radius: 999px; padding: 1px 9px; font-weight: 700; font-size: .78rem; }
+.refer { padding-top: 40px; padding-bottom: 40px; }
+.refer-card { position: relative; background: linear-gradient(135deg, var(--white) 0%, var(--gold-soft) 100%); border: 2px solid var(--gold); border-radius: 30px; padding: 48px; box-shadow: var(--shadow); display: grid; grid-template-columns: 1.1fr 1fr; gap: 36px; align-items: center; overflow: hidden; }
+.refer-card::after { content: '\2726 \2727 \2726'; position: absolute; right: 28px; top: 16px; color: var(--gold); letter-spacing: 10px; opacity: .8; }
+.refer-badge { display: inline-flex; align-items: center; justify-content: center; width: 86px; height: 86px; border-radius: 50%; background: var(--pink-deep); color: var(--white); font-family: var(--font-title); font-weight: 700; font-size: 1.6rem; box-shadow: 0 10px 26px rgba(224, 103, 156, .35); margin-bottom: 14px; }
+.refer-head .eyebrow { display: block; }
+.refer-head h2 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); }
+.refer-head .lead { margin-top: 10px; }
+.refer-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.refer-steps { list-style: none; display: grid; gap: 14px; }
+.refer-steps li { background: var(--white); border-radius: var(--radius-sm); padding: 16px 18px 16px 64px; position: relative; box-shadow: 0 6px 20px rgba(184, 69, 122, .07); display: grid; gap: 2px; }
+.refer-steps strong { font-family: var(--font-title); }
+.refer-steps span:last-child { color: var(--ink-soft); font-size: .92rem; }
+.refer-step__n { position: absolute; left: 18px; top: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--pink); color: var(--white); display: grid; place-items: center; font-weight: 700; }
+.refer-fine { grid-column: 1 / -1; font-size: .82rem; color: var(--ink-soft); margin-top: -8px; }
+@media (max-width: 860px) {
+  .refer-card { grid-template-columns: 1fr; padding: 32px 22px; gap: 24px; }
+  .refer-badge { width: 70px; height: 70px; font-size: 1.3rem; }
+  .topbar .wrap { justify-content: center; }
+}

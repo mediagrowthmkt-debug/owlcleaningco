@@ -58,7 +58,7 @@ function buildPayload(form) {
     bedrooms: data.get('bedrooms') || '',
     bathrooms: data.get('bathrooms') || '',
     frequency: data.get('frequency') || '',
-    message: [data.get('zip') ? 'ZIP: ' + String(data.get('zip')).trim() : '', (data.get('message') || '').trim()].filter(Boolean).join(' | '),
+    message: [data.get('zip') ? 'ZIP: ' + String(data.get('zip')).trim() : '', (data.get('referred_by') || '').trim() ? 'Referred by: ' + String(data.get('referred_by')).trim() : '', (data.get('message') || '').trim()].filter(Boolean).join(' | '),
     smsConsent: data.get('sms_consent') === 'yes',
     smsConsentText: data.get('sms_consent') === 'yes' ? consentText : '',
     formOrigin: form.dataset.origin || 'website',
